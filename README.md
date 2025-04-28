@@ -1,74 +1,101 @@
+
+```markdown
 # Game Recommendation Backend
 
-A TypeScript backend service that provides game recommendations and information using OpenAI's GPT-4o and web search capabilities. This service offers intelligent, up-to-date game recommendations and answers a wide range of game-related questions.
+This is the backend service for the **GenAI Game Recommendation System**, built using TypeScript, Node.js (Fastify), and OpenAI's GPT-4o.  
+It provides intelligent, up-to-date game recommendations by combining **live web search**, **external database enrichment**, and **dynamic AI generation**.
+
+---
 
 ## Features
 
-- **Intelligent Game Recommendations**: Get personalized game suggestions based on your preferences
-- **Web Search Integration**: Fetches the latest information about games from the web
-- **Smart Response Format**: Structured JSON responses with game details
-- **Context-Aware Conversations**: Maintains conversation history for more relevant follow-ups
-- **Error-Resilient Web Scraping**: Robust web search with retry mechanisms and error handling
+- **Intelligent Game Recommendations**: Get personalized and real-time game suggestions based on user preferences
+- **Retrieval Augmented Generation (RAG)**: Combines live search results and external structured data to improve response quality
+- **Web Search Integration**: Fetches the latest information about games from the web using a private search engine (SearXNG)
+- **Knowledge Enrichment via RAWG.io**: Fetches real-time game metadata like ratings, genres, platforms, store availability, and sale status
+- **Smart Response Format**: Returns structured JSON responses optimized for frontend display
+- **Context-Aware Conversations**: Maintains conversation history for better follow-up handling
+- **Error-Resilient Web Scraping**: Implements robust retry mechanisms and timeout handling for web data retrieval
+
+---
 
 ## Prerequisites
 
-1. OpenAI API key
-2. A web search service running on port 8080 (or configure your own endpoint)
-3. Node.js v18 or higher
+- OpenAI API key
+- RAWG.io API key (for external game database enrichment)
+- A web search service running on port 8080 (default is SearXNG)
+- Node.js v18 or higher
+
+---
 
 ## Setup
 
-1. Clone the repository
-2. Install dependencies:
+1. Clone the repository:
+   ```bash
+   git clone your-repo-url
+   cd backend-directory
    ```
+2. Install dependencies:
+   ```bash
    npm install
    ```
-3. Copy `.env.example` to `.env` and add your API keys:
-   ```
+3. Copy environment variables:
+   ```bash
    cp .env.example .env
    ```
-4. Edit `.env` with your OpenAI API key
+4. Fill `.env` with your keys:
+   - `OPENAI_API_KEY`
+   - `RAWG_API_KEY`
+   - `SEARCH_ENDPOINT` (default: `http://127.0.0.1:8080/search`)
+
+---
 
 ## Development
 
 Start the development server:
-
-```
+```bash
 npm run dev
 ```
+
+---
 
 ## Build and Run
 
 Build the TypeScript project:
-
-```
+```bash
 npm run build
 ```
 
 Start the server:
-
-```
+```bash
 npm start
 ```
 
+---
+
 ## API Endpoints
 
-- `POST /chat` - Send a message about games
-
-  - Request body: `{ "message": "your message" }`
-  - Returns:
+- `POST /chat` — Send a user query about games
+  - Request body:
+    ```json
+    {
+      "message": "your message"
+    }
+    ```
+  - Returns a structured JSON like:
     ```json
     {
       "type": "chat",
       "response": {
-        "text": "Your answer about games",
+        "text": "AI-generated answer",
         "games": [
           {
             "name": "Game Name",
-            "description": "Game description",
-            "platforms": ["PC", "PS5", "Xbox"],
+            "description": "Brief description",
+            "platforms": ["PC", "PlayStation 5"],
             "image": "image_url",
-            "score": 4.5
+            "score": 4.5,
+            "sale_status": "On Sale" // (if applicable)
           }
         ]
       },
@@ -76,58 +103,77 @@ npm start
     }
     ```
 
-- `GET /` - Health check endpoint
-  - Returns: `{ "status": "ok" }`
+- `GET /` — Health check
+  - Returns:
+    ```json
+    { "status": "ok" }
+    ```
+
+---
 
 ## Technical Architecture
 
-The system uses a multi-stage approach to provide accurate game recommendations:
+The backend uses a **multi-stage Retrieval Augmented Generation (RAG)** process:
 
-1. **Query Analysis**: Determines if the user's message requires web search for up-to-date information
-2. **Web Search**: If needed, performs a web search to gather the latest information about games
-3. **Content Extraction**: Uses Mozilla's Readability to extract clean, readable content from web pages
-4. **Response Generation**: Uses OpenAI's GPT-4o to generate a structured response with game recommendations
-5. **Game Information Enrichment**: Enhances responses with detailed game information from the RAWG API
+1. **Query Analysis**: Understands user intent and decides if live search is needed
+2. **Live Web Retrieval**: Performs web search using SearXNG for real-time results
+3. **Content Extraction**: Cleans extracted text using Mozilla's Readability
+4. **Context Enrichment**: Fetches structured game metadata from RAWG.io (including store and sale info)
+5. **AI Response Generation**: GPT-4o generates a structured, enriched JSON response for frontend consumption
+
+---
 
 ## Web Search Implementation
 
-The system includes a robust web search functionality with the following features:
+- **Retry Mechanism**: Retries failed requests automatically
+- **Timeout Handling**: Prevents hanging requests with proper timeout settings
+- **Error Management**: Graceful fallback for network or parsing failures
+- **Content Cleaning**: Uses Mozilla's Readability to extract meaningful article text
+- **User-Agent Spoofing**: Proper headers to mimic browser behavior
 
-- **Retry Mechanism**: Automatically retries failed requests up to 3 times
-- **Timeout Handling**: Sets reasonable timeouts to prevent hanging requests
-- **Error Management**: Gracefully handles network errors, parsing errors, and invalid responses
-- **Content Cleaning**: Uses Mozilla's Readability to extract meaningful content from web pages
-- **User-Agent Management**: Uses proper browser-like user agents to avoid being blocked
+---
 
 ## Environment Variables
 
-- `OPENAI_API_KEY` - Your OpenAI API key
-- `PORT` - Server port (default: 3001)
-- `SEARCH_ENDPOINT` - Web search endpoint (default: http://127.0.0.1:8080/search)
+- `OPENAI_API_KEY` — Your OpenAI API Key
+- `RAWG_API_KEY` — RAWG.io API Key for game enrichment
+- `PORT` — Server port (default: 3001)
+- `SEARCH_ENDPOINT` — Web search service endpoint (default: `http://127.0.0.1:8080/search`)
 
-## Conversation Examples
+---
 
-This system works with natural conversation flows and can handle follow-up questions:
+## Conversation Flow Examples
 
 ### Example 1: Game Recommendations
 
-1. User: "I want to play open world games with good story"
-2. System: _returns list of story-rich open world games with details_
-3. User: "Which of these has the best graphics?"
-4. System: _analyzes previously recommended games and compares their graphics quality_
+- **User**: "I want to play open world games with good story"
+- **System**: Returns a curated list of story-rich open world games, including store availability and sale status
+
+- **User**: "Which of these games are on sale?"
+- **System**: Filters previous recommendations based on current sale status
 
 ### Example 2: Specific Game Information
 
-1. User: "Tell me about Elden Ring"
-2. System: _searches the web for latest information about Elden Ring and provides details_
-3. User: "What DLCs are available for it?"
-4. System: _provides up-to-date information about Elden Ring DLCs_
+- **User**: "Tell me about Elden Ring"
+- **System**: Fetches latest web search + RAWG data and provides updated details including DLCs, release updates, and availability.
+
+---
 
 ## Future Improvements
 
-- Database integration for persistent conversation history
-- User authentication and personalized recommendations
-- Game library management features
-- Integration with game stores for purchase links and pricing information
+- **Vectorized Semantic Retrieval**: Future integration with OpenAI Embeddings and vector databases for faster, smarter retrieval
+- **Persistent Database Integration**: Save conversation history and user sessions
+- **Authentication and Personalization**: Recommend games based on user profiles
+- **Dynamic Pricing and Store Comparisons**: Compare multiple stores live for best deals
+- **Full Kubernetes Cloud Deployment**: For scalable infrastructure
 
-**Note:** For production use, consider implementing proper authentication and rate limiting.
+---
+
+## Conclusion
+
+This backend enables a real-time, intelligent game recommendation system by combining Retrieval Augmented Generation (RAG) techniques, live web search, external structured databases, and GPT-4o generation — all while optimizing for cost, flexibility, and accuracy.
+
+---
+```
+
+---
