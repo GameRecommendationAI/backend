@@ -1,0 +1,38 @@
+{
+  "name": "game-recommendation-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/server.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "tsc -w & node --watch dist/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/secure-session": "^8.1.1",
+    "@fastify/session": "^11.1.0",
+    "@mozilla/readability": "^0.6.0",
+    "@paoramen/cheer-reader": "npm:@jsr/paoramen__cheer-reader@^0.1.2",
+    "axios": "^1.8.4",
+    "cheerio": "^1.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "fastify": "^5.2.2",
+    "ollama": "^0.5.14",
+    "openai": "^4.91.0",
+    "uuid": "^11.1.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@fastify/cors": "^11.0.1",
+    "@types/axios": "^0.14.4",
+    "@types/node": "^22.13.14",
+    "typescript": "^5.8.2"
+  }
+}
